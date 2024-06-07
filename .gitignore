@@ -1,3 +1,4 @@
 *.sqlite
 *.pyc
 settings.yaml
+__pycache__

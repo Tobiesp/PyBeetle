@@ -1,8 +1,10 @@
 import sys
 from flask_sqlalchemy import SQLAlchemy
 
+from webapp.settings import Settings
+
 DB = SQLAlchemy()
-SETTINGS = None
+SETTINGS: Settings = Settings()
 
 
 def errPrint(*args, **kwargs):

@@ -1,14 +1,15 @@
 import os
 import yaml
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass()
 class ServerData():
     port: int = 8080
     session_secret_key: str = ''
-    session_timeout: int = 300
+    session_timeout: int = 2678400
     debug_mode: bool = False
+    app_name: str = 'PyBeetle'
 
 
 class Server(ServerData):
@@ -63,25 +64,40 @@ class Database(DatabaseData):
 
 @dataclass
 class SettinngsData():
-    server: Server
-    database: Database
+    server: Server = field(default_factory=Server)
+    database: Database = field(default_factory=Database)
 
 
 class Settings(SettinngsData):
     """Structure storing all the config settings"""
-    def __init__(self, file_path=''):
+    def __init__(self):
+        self._data = {}
+
+    def is_loaded(self):
+        """Check if settings has been loaded or not.
+        
+        Return:
+        true if loaded else false
+        """
+        return bool(self._data)
+
+    def load_settings(self, file_path: str =''):
         """
         Create the settings structure
         
         arguments:
         file_path - Path to the yaml file to read
         """
-        if file_path == '' or file_path is None or not file_path.endswith('.yaml') or not file_path.endswith('.yml'):
+        if file_path == '' or file_path is None or not file_path.endswith('.yaml') and not file_path.endswith('.yml'):
             raise f"Invalid file path supply for settings: {file_path}"
         if not os.access(file_path, os.R_OK):
             raise f"Unable to read file: {file_path}"
         
         with open(file_path, 'r') as file:
-            data = yaml.safe_load(file)
-        data = {k: data[k] for k in SettinngsData.__dataclass_fields__.keys() if k in data}
-        super().__init__(**data)
+            self._data = yaml.safe_load(file)
+        self._data = {k: self._data[k] for k in SettinngsData.__dataclass_fields__.keys() if k in self._data}
+        super().__init__(**self._data)
+        if isinstance(self.server, dict):
+            self.server = Server(self.server)
+        if isinstance(self.database, dict):
+            self.database = Database(self.database)
